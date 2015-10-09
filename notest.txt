@@ -1,0 +1,12 @@
+
+utils
+
+https://github.com/begriffs/postgrest
+http://www.postgresql.org/docs/9.4/static/hstore.html
+http://blog.endpoint.com/2013/07/merging-jsons-in-postgresql.html
+
+http://withouttheloop.com/articles/2014-09-30-postgresql-nosql/
+http://www.depesz.com/2014/03/25/waiting-for-9-4-introduce-jsonb-a-structured-format-for-storing-json/
+http://clarkdave.net/2015/03/navigating-null-safety-with-json-and-postgresql/
+https://chawlasumit.wordpress.com/2014/07/29/parsing-json-array-in-postgres-plpgsql-foreach-expression-must-yield-an-array-not-type-text/
+http://andyfiedler.com/blog/querying-inside-postgres-json-arrays-260/

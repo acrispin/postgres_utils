@@ -1,0 +1,427 @@
+
+Clase de Postgresql 01
+
+Soporta
+	- Store Procedures: multiples lenguajes. Extensiones
+		SQL, PL/pgSQL, PL/Perl, PL/Python, PL/V8, PL/R
+
+	- Funciones de agregacion personalizadas
+
+	- Datos complejos: Fracciones (1/3), json, hstore(datos no estructurados), PostGIS
+
+
+conectarse desde cmd
+	...>psql -U postgres
+
+listar dbs
+	postgres=# \l
+
+listar tablas
+	postgres=# \dt
+
+conectarse a un bd en particular
+	postgres=# \c DBNAME
+
+consulta para obtener la ubicacion fisica de los archivos de configuracion
+	postgres=# select name, setting from pg_settings where category = 'File Locations';
+
+para obtener ayuda
+	postgres=# \h
+
+para salir de la terminal
+	postgres=# \q
+
+consulta para ver valores de configuracion que estan en postgresql.conf
+	postgres=# select name, context, unit, setting, boot_val, reset_val 
+			   from pg_settings where name in ('listen_addresses', 
+			   								   'max_connections', 
+			   								   'shared_buffers', 
+			   								   'effective_cache_size', 
+			   								   'work_mem') 
+				order by context, name;
+
+los context con valor 'postmaster' requieren reinicio del servicio
+los context con valor 'user' no requieren reinicio
+
+para cambiar los valores de configuracion del sistema
+	postgres=# ALTER SYSTEM SET work_mem = 8192;
+
+ejecutar funcion especial para recargar el valor de config actualizado
+	postgres=# SELECT pg_reload_conf();
+
+archivos de configuracion:
+	- postgresql.conf
+	- pg_hba.conf
+	- pg_ident.conf
+
+metodos de conexion en pg_hba.conf
+	trust: menos segura no requiere passwd
+	password: requiere passwd, simple texto
+	md5: requiere password, esta cifrado con hash md5
+	ident: utiliza parametros del archivo pg_ident.conf
+
+
+consulta para ver la actividad de usuarios
+	postgres=# SELECT * FROM pg_stat_activity;
+
+para detener un query que se esta ejecutando pasandole el "pid"
+	postgres=# SELECT pg_cancel_backend(7737)
+
+para cerrar sesion de una usuario, con el pid
+	postgres=# SELECT pg_terminate_backend(7737);
+
+consulta para obtener informacion de una tabla en particular
+	postgres=# select * from information_schema.columns where table_name='sy_user';
+
+
+
+
+
+Clase 02
+
+Roles:
+	- de inicio de sesion: podemos asignar un passwd
+		pueden ser temporales con infinity o una fecha yyyy-mm-dd HH:MM
+	- de grupo: cuenta con permisos, agrupa otros dentro de un rol de grupo
+
+crear bd "platzi" desde el pgAdmin III
+
+desde comando conectarse a postgresql
+	...>psql -U posgres
+
+conectar a la bd creada desde comando
+	postgres=# \c platzi
+
+crear rol de inicio de sesion
+	platzi=# CREATE ROLE video LOGIN PASSWORD '12345678';
+
+para verificar el rol creado
+	platzi=# SELECT * FROM pg_roles;
+
+eliminar el rol creado
+	platzi=# DROP ROLE video;
+
+crear rol de inicio de sesion con password encriptado
+	platzi=# CREATE ROLE video LOGIN ENCRYPTED PASSWORD '12345678';
+
+rol de inicio de sesion con passwd encriptado sin tiempo de expiracion, es lo mismo que la sentencia anterior
+	platzi=# CREATE ROLE video LOGIN ENCRYPTED PASSWORD '12345678' VALID UNTIL 'infinity';
+
+creacion de rol con tiempo de validez
+	platzi=# CREATE ROLE video LOGIN ENCRYPTED PASSWORD '12345678' VALID UNTIL '2015-08-01 00:00';
+
+
+permisos de rol:
+	- CREATEDB
+	- SUPERUSER
+	- CREATEROLE
+
+crear role con permiso 
+	platzi=# CREATE ROLE video LOGIN ENCRYPTED PASSWORD '12345678' CREATEDB;
+
+
+crear rol de grupo, para agrupar roles, con INHERIT se indica que todos asignados a platzi los va a heredar 
+a sus miembros
+	platzi=# CREATE ROLE platzi INHERIT;
+
+agregar un miembro a rol de grupo
+	platzi=# GRANT video TO platzi;
+
+cambiar de role al usuario logueado en cmd
+	platzi=# SET ROLE platzi;
+ 
+crear base de datos
+	platzi=# CREATE DATABASE curso_pg;
+ 
+de la setencia anterior saldra un error de permiso
+se cambia al role video que si tiene permiso para crear bd
+	platzi=# SET ROLE video;
+
+se ejecuta la sentencia de creacion de bd y si lo hace correctamente
+
+templates en postgres, se maneja 2 templates por defecto: template0 y template1
+creacion de bd con especificando template
+	platzi=# CREATE DATABASE curso_pg TEMPLATE template1;
+
+esquemas, para la organizacion logica de objetos dentro de un bd
+creacion de esquema
+	platzi=# CREATE SCHEMA video;
+
+privilegios o permisos
+otorgar todos los privilegios en todas las tablas del esquema video al rol platzi
+con "WITH GRANT OPTION" damos permiso a un rol para que pueda otorgar privilegios a otros
+ese comando va al final
+	platzi=# GRANT ALL ON ALL TABLES IN SCHEMA video TO platzi;
+
+otorgar un permiso en particular
+	platzi=# GRANT SELECT ON ALL TABLES IN SCHEMA video TO platzi;
+
+tipos de datos
+secuencias, creacion manual
+	platzi=# CREATE SEQUENCE ejemplo;
+
+obtener el siguiente valor
+	platzi=# SELECT NEXTVAL('ejemplo');
+
+obtener el valor actual
+	platzi=# SELECT CURRVAL('ejemplo');
+
+reinicar una secuencia segun valor especificado
+	platzi=# SELECT SETVAL('ejemplo', 4);
+
+cadenas de texto, 3 tipos:
+	CHAR(n), VARCHAR(n), TEXT 
+
+el tipo TEXT tiene hasta 1 GB de almacenamiento
+
+funciones de cadena
+	platzi=# SELECT LPAD('ab', 3, '0') AS pad, REPEAT('-', 4) || 'zy' AS dash, TRIM('  GK  ') AS trim;
+
+extraer una posicion de una cadena dividida por delimitador
+	platzi=# SELECT SPLIT_PART('312-4657-2947', '-', 2) AS part2;
+
+separar un string por delimitador y convertirla a tipo arreglo
+	platzi=# SELECT STRING_TO_ARRAY('aaa.bbb.ccc', '.') AS arr;
+
+creacion de un arreglo
+	platzi=# SELECT ARRAY[2013, 2014, 2015] AS YEARS;
+
+transformar resultado de select en array
+	platzi=# SELECT ARRAY(SELECT DISTINCT gender FROM data);
+	platzi=# SELECT ARRAY(SELECT DISTINCT rolname FROM pg_roles);
+
+otra forma de hacer arreglos usando el :: para hacer cast o conversion de tipo de datos
+	platzi=# SELECT '{mysql,postgresql,oracle}'::TEXT[] AS arr;
+
+obtener elemento de un arreglo por indica
+en posgres todos los arreglos comienzan por el indice 1 y no 0
+	platzi=# SELECT arr[2] FROM (SELECT '{mysql,postgresql,oracle}'::TEXT[] AS arr) AS test;
+
+con rango
+	platzi=# SELECT arr[2:3] FROM (SELECT '{mysql,postgresql,oracle}'::TEXT[] AS arr) AS test;
+
+usando UNNEST para separar los valores de arreglos como lineas independientes
+	platzi=# SELECT UNNEST(arr[2:3]) FROM (SELECT '{mysql,postgresql,oracle}'::TEXT[] AS arr) AS test;
+
+rangos, que sea mayor a cero y menor a 6
+	platzi=# SELECT '(0,6)'::INT8RANGE;
+
+rangos, que sea mayor igual a cero y menor a 6
+	platzi=# SELECT '[0,6)'::INT8RANGE;
+
+rango de fechas
+	platzi=# SELECT '[2015-07-01, 2015-08-01]'::DATERANGE;
+
+rango infinitos
+	platzi=# SELECT '[100,)'::INT8RANGE;
+
+uso de rango, height este entre los valores del rango especificado
+	platzi=# SELECT * FROM data WHERE '[70.0, 71.0)'::NUMRANGE @> height;
+
+tipo JSON
+creacion de tabla de prueba
+	platzi=# CREATE TABLE profiles (id SERIAL PRIMARY KEY, profile JSON);
+
+creacion de registros
+	platzi=# INSERT INTO profiles(profile) VALUES('{"name":"Mario", "tech":["pg","rb","py"]}');
+	platzi=# INSERT INTO profiles(profile) VALUES('{"name":"Jose", "tech":["js","java",".net"]}');
+
+obtencion de campos del documento json
+	platzi=# SELECT JSON_EXTRACT_PATH_TEXT(profile, 'name') FROM profiles;
+
+array json
+	platzi=# SELECT JSON_ARRAY_ELEMENTS('["test", 1.3, "otro"]');
+
+tipo JSONB
+creacion de tabla de prueba
+	platzi=# CREATE TABLE profiles_b (id SERIAL PRIMARY KEY, profile JSONB);
+	platzi=# INSERT INTO profiles_b(profile) VALUES('{"name":"Mario", "tech":["pg","rb","py"]}');
+	platzi=# INSERT INTO profiles_b(profile) VALUES('{"name":"Jose", "tech":["js","java",".net"]}');
+
+obtencion de campos del documento jsonb
+	platzi=# SELECT JSONB_EXTRACT_PATH_TEXT(profile, 'name') FROM profiles_b;
+	platzi=# SELECT JSONB_EXTRACT_PATH_TEXT(profile, 'tech') FROM profiles_b;
+
+
+
+
+
+
+Clase 03
+
+ obtener arreglos de json
+	platzi=# SELECT p.id, STRING_TO_ARRAY(STRING_AGG(elem, ','), ',') AS list
+	platzi-# FROM profiles p, JSON_ARRAY_ELEMENTS_TEXT(p.profile->'tech') elem
+	platzi-# GROUP BY 1;
+
+obtener el campo nombre de json
+	platzi=# SELECT id, profile->>'name' AS name FROM profiles;
+
+usando json con filtros
+	platzi=# SELECT * FROM profiles WHERE profile->>'name' = 'Mario';
+
+creacion de tabla de ejemplo
+	platzi=# CREATE TABLE data (gender VARCHAR(50), height NUMERIC(10,4), weight NUMERIC(10,4));
+	platzi=# CREATE TABLE data2 (gender VARCHAR(50), height REAL, weight REAL);
+	platzi=# CREATE TABLE data3 (gender VARCHAR(50), height FLOAT, weight FLOAT);
+	platzi=# INSERT INTO data3 VALUES
+			 ('Male', 73.85, 241.89),
+			 ('Male', 68.78, 162.31),
+			 ('Male', 74.11, 212.74),
+			 ('Male', 72.35, 237.91),
+			 ('Feme', 51.84, 202.64),
+			 ('Feme', 57.19, 215.09),
+			 ('Feme', 55.24, 198.48),
+			 ('Feme', 52.23, 180.69);
+
+convertir una fila normal a json
+	platzi=# SELECT ROW_TO_JSON(d) FROM data3 AS d LIMIT 3;
+
+convertir una fila normal a json especificando columnas a retornar
+	platzi=# SELECT ROW_TO_JSON(ROW(gender, height)) FROM data3 AS d LIMIT 3;
+
+convertir una fila normal a json especificando columnas a retornar formateado
+	platzi=# SELECT ROW_TO_JSON(t) FROM (SELECT gender, height FROM data LIMIT 3) AS t;
+
+obtener array json
+	platzi=# SELECT ARRAY_TO_JSON(ARRAY_AGG(ROW_TO_JSON(t)))
+			 FROM (
+			 SELECT gender , height FROM data3 LIMIT 3) AS t;
+
+tipo HSTORE
+activacion de la extension HSTORE
+	platzi=# CREATE EXTENSION hstore; 
+
+	-- DROP EXTENSION hstore; para eliminarlo
+
+creacion de tabla con hstore
+	platzi=# CREATE TABLE hprofiles (id SERIAL PRIMARY KEY, profile HSTORE);
+
+detalle de la tabla creada
+	platzi=# \d hprofiles;
+
+insercion de valores dentro de hstore
+	platzi=# INSERT INTO hprofiles(profile) VALUES('name=>Mario, python=>true, posgresql=>true');
+	platzi=# INSERT INTO hprofiles(profile) VALUES('name=>Juan, js=>true, nodejs=>true');
+
+obtener los valores name
+	platzi=# SELECT profile->'name' AS name FROM hprofiles;
+
+obtener valores con una llave especifica
+	platzi=# SELECT * FROM hprofiles WHERE (profile->'js')::BOOLEAN;
+	platzi=# SELECT * FROM hprofiles WHERE (profile->'js')::BOOLEAN = TRUE;
+	platzi=# SELECT * FROM hprofiles WHERE (profile->'js')::BOOLEAN = FALSE;
+
+para verificar si un campo de hstore tiene una llave con determinado valor usando la notacion @>
+	platzi=# SELECT * FROM hprofiles WHERE profile @> 'nodejs=>true';
+
+para preguntar si un registro tiene una respectiva llave
+	platzi=# SELECT * FROM hprofiles WHERE profile ? 'nodejs';
+
+verificar si un registro en hstore contiene 2 llaves o mas, deben estar las llaves indicadas
+	platzi=# SELECT * FROM hprofiles
+			 WHERE profile ?& ARRAY['name','python'];
+
+verificar si un registro en hstore contiene 2 llaves o mas, puede estar a lo mas una
+	platzi=# SELECT * FROM hprofiles
+			 WHERE profile ?| ARRAY['name','python'];
+
+actualizar todos los registros hstore adicionandole una nueva llave
+	platzi=# UPDATE hprofiles SET profile = profile || 'html5=>true'::HSTORE;
+	platzi=# UPDATE hprofiles SET profile = profile || 'go=>true'::HSTORE;
+
+adicion de nueva llave y modificacion de nueva llave para determinado registro
+	platzi=# UPDATE hprofiles SET profile = profile || 'xxx=>true'::HSTORE WHERE id = 1;
+	platzi=# UPDATE hprofiles SET profile = profile || 'xxx=>false'::HSTORE WHERE id = 1;
+
+eliminacion de llave en columna hstore
+	platzi=# UPDATE hprofiles SET profile = DELETE(profile, 'xxx') WHERE id = 1;
+
+obtencion de las keys de columna hstore en formato array
+	platzi=# SELECT AKEYS(profile) FROM hprofiles;
+
+obtencion de las keys de columna hstore en formato set
+	platzi=# SELECT SKEYS(profile) FROM hprofiles;
+	platzi=# SELECT DISTINCT SKEYS(profile) FROM hprofiles;
+
+columna hstore to json
+	platzi=# SELECT HSTORE_TO_JSON(profile) FROM hprofiles;
+
+uso de hstore: para guardar settings o configuraciones por usuario o empresa por ejemplo
+
+
+uso de postgis
+activacion de la extension
+	platzi=# CREATE EXTENSION postgis;
+
+
+
+
+queries utils
+
+/*
+
+$ CREATE EXTENSION plpythonu;
+
+
+CREATE FUNCTION merge_json(left JSON, right JSON)
+RETURNS JSON AS $$
+  import simplejson as json
+  l, r = json.loads(left), json.loads(right)
+  l.update(r)
+  j = json.dumps(l)
+  return j
+$$ LANGUAGE PLPYTHONU;
+
+
+
+WITH j AS (
+  SELECT
+    '{"a":42, "b":"test"}'::JSON a,
+    '{"a":1764, "x":"test x"}'::JSON b
+)
+SELECT a, b
+FROM j;
+
+
+SELECT split_part('312-4657-2947', '-', 2) AS x;
+
+SELECT * FROM pg_roles;
+
+
+SELECT ARRAY_TO_JSON(ARRAY_AGG(ROW_TO_JSON(t)))
+			 FROM (
+			 SELECT gender , height FROM data3 LIMIT 3) AS t;
+
+
+*/
+
+
+
+
+
+
+
+
+-- conectarme a heroku por linea de comandos
+$ psql -h ec2-54-227-255-240.compute-1.amazonaws.com -p 5432 -d d3gfgcvud4enli -U gywbioexrnbuau
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
