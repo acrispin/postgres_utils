@@ -1,59 +1,4 @@
 
-----------------------------------------------------------------------
--- loop in json object
-/*
-fuentes:
-http://withouttheloop.com/articles/2014-09-30-postgresql-nosql/
-http://www.depesz.com/2014/03/25/waiting-for-9-4-introduce-jsonb-a-structured-format-for-storing-json/
-http://clarkdave.net/2015/03/navigating-null-safety-with-json-and-postgresql/
-https://chawlasumit.wordpress.com/2014/07/29/parsing-json-array-in-postgres-plpgsql-foreach-expression-must-yield-an-array-not-type-text/
-http://andyfiedler.com/blog/querying-inside-postgres-json-arrays-260/
-http://stackoverflow.com/questions/20272650/how-to-loop-over-json-arrays-in-postgresql-9-3
-
-*/
-
--- loop de json
-DO
-$BODY$
-DECLARE
-    omgjson json := '[{ "type": false }, { "type": "photo" }, {"type": "comment" }]';
-    i json;
-BEGIN
-  FOR i IN SELECT * FROM json_array_elements(omgjson)
-  LOOP
-    RAISE NOTICE 'output from space %', i->>'type';
-  END LOOP;
-END;
-$BODY$ language plpgsql
-
--- loop de json
-DO
-$BODY$
-DECLARE
-    -- omgjson json := '[{ "type": false }, { "type": "photo" }, {"type": "comment" }]';
-    omgjson json := '[{"cum_date":"1979-03-13","nom":"Pablo","ocu":null,"est_civ":null,"celu":null,"dni":"00154874","id":12,"fijo":null,"sex":null,"email2":null,"email":"pmedina@hotmail.com","ape":"Medina"}]';
-    omgjson2 json := '{"cum_date":"1979-03-13","nom":"Pablo","ocu":null,"est_civ":null,"celu":null,"dni":"00154874","id":12,"fijo":null,"sex":null,"email2":null,"email":"pmedina@hotmail.com","ape":"Medina"}';
-    i json;
-BEGIN
-    RAISE NOTICE 'sss %', omgjson2->>'id';
-  FOR i IN SELECT * FROM json_array_elements(omgjson)
-  LOOP
-    RAISE NOTICE 'output from space %', i->>'id';
-    RAISE NOTICE 'output from space %', i->>'nom';
-    RAISE NOTICE 'output from space %', i->>'ape';
-    RAISE NOTICE 'output from space %', i->>'dni';
-    RAISE NOTICE 'output from space %', i->>'email';
-    RAISE NOTICE 'output from space %', i->>'email2';
-    RAISE NOTICE 'output from space %', i->>'celu';
-    RAISE NOTICE 'output from space %', i->>'fijo';
-    RAISE NOTICE 'output from space %', i->>'ocu';
-    RAISE NOTICE 'output from space %', i->>'sex';
-    RAISE NOTICE 'output from space %', i->>'est_civ';
-    RAISE NOTICE 'output from space %', i->>'cum_date';
-  END LOOP;
-END;
-$BODY$ language plpgsql
-
 -- validacion de llaves en el json
 DO
 $BODY$
@@ -73,6 +18,8 @@ END;
 $BODY$ language plpgsql
 
 
+
+
 -- verificacion de codigo
 DO
 $BODY$
@@ -89,81 +36,12 @@ $BODY$ language plpgsql
 
 
 
-CREATE OR REPLACE FUNCTION json_array_map(json_arr json, path TEXT[]) RETURNS json[]
-LANGUAGE plpgsql IMMUTABLE AS $$
-DECLARE
-    rec json;
-    len int;
-    ret json[];
-BEGIN
-    -- If json_arr is not an array, return an empty array as the result
-    BEGIN
-        len := json_array_length(json_arr);
-    EXCEPTION
-        WHEN OTHERS THEN
-            RETURN ret;
-    END;
-
-    -- Apply mapping in a loop
-    FOR rec IN SELECT json_array_elements#>path FROM json_array_elements(json_arr)
-    LOOP
-        ret := array_append(ret,rec);
-    END LOOP;
-    RETURN ret;
-END $$;
-
-
-CREATE OR REPLACE FUNCTION parse_json () 
-RETURNS VOID
-AS $$
-  DECLARE json_object json;
-  DECLARE item json;
-  BEGIN
-    SELECT ('{ "Name":"My Name", "Items" :[{ "Id" : 1, "Name" : "Name 1"}, { "Id" : 2, "Name 2" : "Item2 Name"}]}')::json into json_object;
-    RAISE NOTICE 'Parsing %', json_object->>'Name';
-    FOR item IN SELECT * FROM json_array_elements((json_object->>'Items')::json)
-    LOOP
-       RAISE NOTICE 'Parsing Item % %', item->>'Id', item->>'Name';
-    END LOOP;
-  END;
-  $$ LANGUAGE 'plpgsql';
-  
-select parse_json();
-
-
-
-
-CREATE OR REPLACE FUNCTION parse_jsonb() 
-RETURNS VOID
-AS $$
-  DECLARE json_object jsonb;
-  DECLARE item jsonb;
-  BEGIN
-    SELECT ('{ "Name":"My Name", "Items" :[{ "Id" : 1, "Name" : "Name 1"}, { "Id" : 2, "Name 2" : "Item2 Name"}]}')::jsonb into json_object;
-    RAISE NOTICE 'Parsing %', json_object->>'Name';
-    FOR item IN SELECT * FROM jsonb_array_elements((json_object->>'Items')::jsonb)
-    LOOP
-       RAISE NOTICE 'Parsing Item % %', item->>'Id', item->>'Name';
-    END LOOP;
-  END;
-  $$ LANGUAGE 'plpgsql';
-  
-select parse_jsonb();
-
-
-
-
-
-
-
-----------------------------------------------------------------------
--- generar json desde postgres de proyecto decortinas
+---------------------------------------------------------------------- proyecto decortinas
+-- generar json desde postgres
 /*
 fuentes
 http://hashrocket.com/blog/posts/faster-json-generation-with-postgresql
 */
-
-
 select row_to_json(mtr) from mtr ;
 
 
@@ -200,8 +78,7 @@ SELECT id, nom, col_id
               FROM clr
               WHERE act 
               
-) T;          
-
+) T;
 
 
 SELECT COALESCE(ARRAY_TO_JSON(ARRAY_AGG(T))::TEXT,'[]')
@@ -269,49 +146,6 @@ FROM (
 */
 
 
--- json types
-select '[1,2,3]'::json->2; -- retorna tipo json
-select '[1,2,3]'::json->>2 -- retorna tipo text
-select '{"a":1,"b":2}'::json->'b'; -- retorna tipo json
-select '{"a":1,"b":2}'::json->>'b'; -- retorna tipo text
-select coalesce('{"a":1,"b":2}'::json->'c','0');
-select coalesce('{"a":1,"b":2}'::json->>'c','0');
-select json_array_length('[1,2]');
-
-
--- dates
--- http://www.postgresql.org/docs/9.4/static/functions-formatting.html
-select TO_CHAR(NOW(), 'YYYY-mm-dd');
-select TO_CHAR(NOW(), 'dd/mm/YYYY');
-select TO_CHAR(NOW(), 'dd/mm/YYYY HH24:MI:SS:MS');
-select TO_CHAR(NOW(), 'dd/mm/YYYY HH24:MI AM'); -- indicador de meridiano, setea AM o PM segun la hora y no la del formato inicado, se puede poner cualquiera de los 2
-select TO_CHAR(NOW(), 'dd/mm/YYYY HH12:MI AM');
-select TO_CHAR(NOW(), 'dd/mm/YYYY HH12:MI PM');
-
-
-
--- operaciones con fechas
--- http://www.postgresql.org/docs/9.4/static/functions-datetime.html
-select date '2001-09-28' + integer '7';
-select date '2001-09-28' - interval '1 hour'; -- genera un timestamp
-select date '2001-10-01' - date '2001-09-28';
-select now() + interval '1 day';
-select now() - interval '30 days';
-select now() + interval '1 hour';
-select now() - interval '1 hour';
-select now() + interval '22 hours';
-select now() + interval '1 month';
-select now() + interval '1 year';
-select timestamp '2001-09-28 01:00' + interval '23 hours';
-
--- obtener date de un timestamp
-select now()::date;
-select date(now());
-select (now() - interval '20 year')::date;
-select date(now() - interval '20 year');
-
-
-
 -- para manejar funciones de insert, update y delete y que retornen un result generico
 CREATE TYPE result_type AS (rs INT, msg TEXT, id INT); 
 
@@ -342,7 +176,6 @@ FROM (
 
 
 -- json para cotizacion
-
 /*
 
 {
@@ -503,4 +336,4 @@ BEGIN
 END;
 $BODY$ language plpgsql
 
-
+---------------------------------------------------------------------- proyecto decortinas

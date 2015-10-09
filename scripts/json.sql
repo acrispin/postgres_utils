@@ -31,6 +31,17 @@ select * from json_populate_recordset(null::aat, '[{"a":1,"b":2},{"a":3,"b":4}]'
 
 
 
+-- json types
+select '[1,2,3]'::json->2; -- retorna tipo json
+select '[1,2,3]'::json->>2 -- retorna tipo text
+select '{"a":1,"b":2}'::json->'b'; -- retorna tipo json
+select '{"a":1,"b":2}'::json->>'b'; -- retorna tipo text
+select coalesce('{"a":1,"b":2}'::json->'c','0');
+select coalesce('{"a":1,"b":2}'::json->>'c','0');
+select json_array_length('[1,2]');
+
+
+
 
 -- http://michael.otacoo.com/postgresql-2/postgres-9-3-feature-highlight-json-parsing-functions/
 DO LANGUAGE plpgsql $$
