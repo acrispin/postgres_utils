@@ -10,3 +10,29 @@ http://www.depesz.com/2014/03/25/waiting-for-9-4-introduce-jsonb-a-structured-fo
 http://clarkdave.net/2015/03/navigating-null-safety-with-json-and-postgresql/
 https://chawlasumit.wordpress.com/2014/07/29/parsing-json-array-in-postgres-plpgsql-foreach-expression-must-yield-an-array-not-type-text/
 http://andyfiedler.com/blog/querying-inside-postgres-json-arrays-260/
+
+http://blog.endpoint.com/2013/07/merging-jsons-in-postgresql.html
+http://cryto.net/~joepie91/blog/2015/07/19/why-you-should-never-ever-ever-use-mongodb/
+http://developer.olery.com/blog/goodbye-mongodb-hello-postgresql/
+http://www.sarahmei.com/blog/2013/11/11/why-you-should-never-use-mongodb/
+https://news.ycombinator.com/item?id=6712703
+https://github.com/diaspora/diaspora
+http://www.aptuz.com/blog/is-postgres-nosql-database-better-than-mongodb/
+http://boundlessgeo.com/2012/04/http-for-postgresql/
+https://vibhorkumar.wordpress.com/2014/05/15/write-operation-mongodb-vs-postgresql-9-3-json/
+http://dba.stackexchange.com/questions/57448/mongodb-performance-vs-postgresql-with-5-5-million-rows-documents
+http://www.rogerpence.com/2015/01/02/install-postgres-9-4-on-ubuntu/
+
+-- node nodejs with async postgres
+http://gonzalo123.com/2012/05/07/asynchronous-queries-to-relational-databases-from-browser-with-node-js-and-socket-io/
+http://bjorngylling.com/2011-04-13/postgres-listen-notify-with-node-js.html
+http://lheurt.blogspot.com/2011/11/listen-to-postgresql-inserts-with.html
+http://stackoverflow.com/questions/13466421/asynchronous-calls-using-postgres-as-an-example-in-nodejs
+http://stackoverflow.com/questions/20081756/node-js-async-insert-into-postgresql-database-results-from-api
+-- tornado momoko postgresql
+http://www.maigfrga.ntweb.co/asynchronous-database-code-tornado-and-postgresql/
+https://github.com/maigfrga/blog/tree/master/2014/01
+https://github.com/FSX/momoko/blob/master/examples/gen_example.py
+http://stackoverflow.com/questions/27315918/tornado-momoko
+http://stackoverflow.com/questions/22405382/tornado-momoko-growing-response-time
+
