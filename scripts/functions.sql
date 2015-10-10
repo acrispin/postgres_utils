@@ -103,3 +103,23 @@ END $$;
 
 select * from t2;
 
+
+
+
+-- obtener el nombre de la funcion a ejecutar
+-- select * from pg_proc; 
+
+create or replace function disp() returns text as  
+$$  
+declare  
+   t text;  
+begin  
+  t := 'Function data...';  
+  raise notice E'Function caller name \' % \'',current_query();  
+  raise notice '%',current_query();
+  return t;  
+end;  
+$$ language plpgsql;
+
+select disp(); 
+
