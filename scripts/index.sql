@@ -96,6 +96,25 @@ explain analyze select t from test where extract(year from t) = extract(year fro
 */
 
 
+-- otro query filtrando con HH:MI
+EXPLAIN ANALYZE
+SELECT t 
+FROM test 
+WHERE t::DATE > (NOW() - '1 days'::INTERVAL)::DATE
+      AND EXTRACT(HOUR FROM t) = 15
+      AND EXTRACT(MINUTE FROM t) = 25;
+/*
+"Bitmap Heap Scan on test  (cost=3242.44..11262.44 rows=4 width=8) (actual time=0.774..0.834 rows=1 loops=1)"
+"  Recheck Cond: ((t)::date > ((now() - '1 day'::interval))::date)"
+"  Filter: ((date_part('hour'::text, t) = 15::double precision) AND (date_part('minute'::text, t) = 25::double precision))"
+"  Rows Removed by Filter: 1035"
+"  Heap Blocks: exact=5"
+"  ->  Bitmap Index Scan on i_test_t  (cost=0.00..3242.44 rows=175200 width=0) (actual time=0.213..0.213 rows=1036 loops=1)"
+"        Index Cond: ((t)::date > ((now() - '1 day'::interval))::date)"
+"Planning time: 0.216 ms"
+*/
+
+
 -- uso de generate_series
 -- http://www.postgresql.org/docs/9.4/static/functions-srf.html
 SELECT * FROM generate_series(2,4);
