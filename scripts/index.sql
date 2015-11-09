@@ -507,3 +507,77 @@ newer items will occupy later pages in the array, and so there is quite a reliab
 page number and the creation date column value. A BRIN index over this column would work very well.
 
 */
+
+
+-- Pruebas de indices
+CREATE TABLE test_int(cod SERIAL PRIMARY KEY NOT NULL, ran INTEGER);
+INSERT INTO test_int(ran) SELECT * FROM generate_series(1, 5000000, 10);
+
+explain analyze
+select max(cod) from test_int
+/*
+Result  (cost=0.46..0.47 rows=1 width=0) (actual time=0.038..0.038 rows=1 loops=1)
+  InitPlan 1 (returns $0)
+    ->  Limit  (cost=0.42..0.46 rows=1 width=4) (actual time=0.032..0.032 rows=1 loops=1)
+          ->  Index Only Scan Backward using test_int_pkey on test_int  (cost=0.42..16462.42 rows=500000 width=4) (actual time=0.031..0.031 rows=1 loops=1)
+                Index Cond: (cod IS NOT NULL)
+                Heap Fetches: 1
+Planning time: 0.165 ms
+Execution time: 0.079 ms
+*/
+
+explain analyze
+select cod from test_int order by cod desc limit 1
+/*
+Limit  (cost=0.42..0.45 rows=1 width=4) (actual time=0.024..0.024 rows=1 loops=1)
+  ->  Index Only Scan Backward using test_int_pkey on test_int  (cost=0.42..15212.42 rows=500000 width=4) (actual time=0.023..0.023 rows=1 loops=1)
+        Heap Fetches: 1
+Planning time: 0.105 ms
+Execution time: 0.047 ms
+*/
+
+explain analyze
+select max(ran) from test_int 
+/*
+Aggregate  (cost=8463.00..8463.01 rows=1 width=4) (actual time=104.198..104.198 rows=1 loops=1)
+  ->  Seq Scan on test_int  (cost=0.00..7213.00 rows=500000 width=4) (actual time=0.021..52.396 rows=500000 loops=1)
+Planning time: 0.139 ms
+Execution time: 104.244 ms
+*/
+
+explain analyze
+select ran from test_int order by ran desc limit 1
+/*
+Limit  (cost=9713.00..9713.00 rows=1 width=4) (actual time=138.978..138.979 rows=1 loops=1)
+  ->  Sort  (cost=9713.00..10963.00 rows=500000 width=4) (actual time=138.976..138.976 rows=1 loops=1)
+        Sort Key: ran
+        Sort Method: top-N heapsort  Memory: 25kB
+        ->  Seq Scan on test_int  (cost=0.00..7213.00 rows=500000 width=4) (actual time=0.030..70.902 rows=500000 loops=1)
+Planning time: 0.133 ms
+Execution time: 139.018 ms
+*/
+
+create index ix_ran on test_int(ran);
+
+explain analyze
+select max(ran) from test_int 
+/*
+Result  (cost=0.46..0.47 rows=1 width=0) (actual time=0.034..0.035 rows=1 loops=1)
+  InitPlan 1 (returns $0)
+    ->  Limit  (cost=0.42..0.46 rows=1 width=4) (actual time=0.030..0.031 rows=1 loops=1)
+          ->  Index Only Scan Backward using ix_ran on test_int  (cost=0.42..16462.42 rows=500000 width=4) (actual time=0.029..0.029 rows=1 loops=1)
+                Index Cond: (ran IS NOT NULL)
+                Heap Fetches: 1
+Planning time: 0.161 ms
+Execution time: 0.072 ms
+*/
+
+explain analyze
+select ran from test_int order by ran desc limit 1
+/*
+Limit  (cost=0.42..0.45 rows=1 width=4) (actual time=0.022..0.022 rows=1 loops=1)
+  ->  Index Only Scan Backward using ix_ran on test_int  (cost=0.42..15212.42 rows=500000 width=4) (actual time=0.020..0.020 rows=1 loops=1)
+        Heap Fetches: 1
+Planning time: 0.108 ms
+Execution time: 0.045 ms
+*/

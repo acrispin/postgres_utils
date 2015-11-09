@@ -147,3 +147,62 @@ END $$;
 
 -- uso
 SELECT DISTINCT unnest(json_array_map(orders.json_field#>'{products}', '{id}'::text[]))::text AS "id" FROM orders;
+
+
+
+
+-- accediendo a array de json con loop
+DO
+$BODY$
+DECLARE
+    omgjson jsonb := '[{ "type": false }, { "type": "photo" }, {"type": "comment" }]';
+    omgjson2 jsonb := '["MORO","EXTR","MILA"]';
+    i json;
+BEGIN
+  FOR i IN SELECT * FROM jsonb_array_elements(omgjson2)
+  LOOP
+    RAISE NOTICE 'output from space %', trim(i::text, '"');
+  END LOOP;  
+  
+  FOR i1 IN 0..(jsonb_array_length(omgjson2)-1) LOOP
+    RAISE NOTICE 'i1 = %', omgjson2->>(i1);
+  END LOOP;
+END;
+$BODY$ language plpgsql;
+
+SELECT value->>0 FROM jsonb_array_elements('["MORO","EXTR","MILA"]'::jsonb);
+
+
+-- accediendo a array de json con loop, obteniendo el item como texto
+DO
+$BODY$
+DECLARE
+    omgjson jsonb := '[{ "type": false }, { "type": "photo" }, {"type": "comment" }]';
+    omgjson2 jsonb := '["MORO","EXTR","MILA"]';
+    i text;
+BEGIN
+  FOR i IN SELECT * FROM jsonb_array_elements_text(omgjson2)
+  LOOP
+    RAISE NOTICE 'output from space %', i;
+  END LOOP;
+END;
+$BODY$ language plpgsql;
+
+
+-- accediendo a array de json con loop, casteando a array de postgres
+DO
+$BODY$
+DECLARE
+    omgjson jsonb := '[{ "type": false }, { "type": "photo" }, {"type": "comment" }]';
+    omgjson2 jsonb := '["MORO","EXTR","MILA"]';
+    i text;
+BEGIN
+  FOREACH i IN ARRAY ARRAY(SELECT jsonb_array_elements_text(omgjson2))
+  LOOP
+    RAISE NOTICE 'output from space %', i;
+  END LOOP;
+END;
+$BODY$ language plpgsql;
+
+SELECT * FROM jsonb_array_elements_text('["MORO","EXTR","MILA"]'::jsonb);
+SELECT ARRAY(SELECT jsonb_array_elements_text('["MORO","EXTR","MILA"]'::jsonb))
