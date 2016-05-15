@@ -32,8 +32,6 @@ select date(now() - interval '20 year');
 
 
 -- 
-select extract(hour from timestamp '2001-02-16 20:38:40');
-select extract(month from interval '2 years 3 months');
 SELECT EXTRACT(CENTURY FROM TIMESTAMP '2000-12-16 12:21:13');
 SELECT EXTRACT(CENTURY FROM TIMESTAMP '2001-02-16 20:38:40');
 SELECT EXTRACT(HOUR FROM TIMESTAMP '2001-02-16 20:38:40');
@@ -52,3 +50,8 @@ SELECT EXTRACT(DECADE FROM TIMESTAMP '2001-02-16 20:38:40'); -- The year field d
 SELECT EXTRACT(DOW FROM TIMESTAMP '2001-02-16 20:38:40'); -- The day of the week as Sunday (0) to Saturday (6)
 SELECT EXTRACT(DOY FROM TIMESTAMP '2001-02-16 20:38:40'); -- The day of the year (1 - 365/366)
 SELECT EXTRACT(MILLENNIUM FROM TIMESTAMP '2001-02-16 20:38:40');
+
+
+-- obtener nombre de mes
+-- http://stackoverflow.com/questions/9094392/get-month-name-from-number-in-postgresql
+SELECT to_char(to_timestamp(to_char(4, '999'), 'MM'), 'Mon')
