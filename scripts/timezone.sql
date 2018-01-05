@@ -33,3 +33,10 @@ select * from pg_timezone_names where name like '%Istanbul%';
 
 -- volver a conectarse y verificar el cambio
     dbname_heroku=> show timezone;
+
+
+
+/* la bd esta configurada timezone a UTC */
+SELECT '2016-01-01 17:00:00-05:00'::timestamptz; -- retorna '2016-01-01 22:00:00+00'
+
+SELECT '2016-01-01 17:00:00-05:00'::timestamp; -- retorna '2016-01-01 17:00:00'
