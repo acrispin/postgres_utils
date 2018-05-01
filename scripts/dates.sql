@@ -55,3 +55,20 @@ SELECT EXTRACT(MILLENNIUM FROM TIMESTAMP '2001-02-16 20:38:40');
 -- obtener nombre de mes
 -- http://stackoverflow.com/questions/9094392/get-month-name-from-number-in-postgresql
 SELECT to_char(to_timestamp(to_char(4, '999'), 'MM'), 'Mon')
+
+
+
+-- YYYY-mm-dd HH24:MI:SS
+SELECT to_date('2018-01-31', 'YYYY-mm-dd')
+SELECT to_timestamp('2018-01-31 00:00:00-05:00', 'YYYY-mm-dd HH24:MI:SS')
+SELECT now() + INTERVAL '2 day';
+SELECT now() + INTERVAL '3' day;
+SELECT now() + INTERVAL '4 hour'
+SELECT now() + INTERVAL '1h' * 3;
+-- https://www.postgresql.org/docs/9.5/static/functions-formatting.html
+SELECT TO_CHAR(NOW() AT TIME ZONE 'America/Lima', 'YYYY-mm-dd HH24:MI:SS') AS "date to timezone off app";
+SELECT TO_CHAR(NOW() AT TIME ZONE 'America/Lima', 'YYYY-mm-dd HH24:MI:SSTZ') AS "date to timezone off app";
+SELECT TO_CHAR(NOW() AT TIME ZONE 'America/Lima', 'YYYY-mm-dd HH24:MI:SStz') AS "date to timezone off app";
+SELECT TO_CHAR(NOW() AT TIME ZONE 'America/Lima', 'YYYY-mm-dd HH24:MI:SSOF') AS "date to timezone off app";
+SELECT '2015-01-15 -05:00'::TIMESTAMPTZ, TIMEZONE('UTC'::text, '2015-01-15 +06:00'::TIMESTAMPTZ);
+SELECT '2018-01-31 00:00:00 -05:00'::TIMESTAMPTZ + INTERVAL '1 DAY';
