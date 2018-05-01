@@ -354,3 +354,27 @@ SELECT id,
 FROM books;
 
 
+
+
+
+-- http://stackoverflow.com/questions/33129526/loading-json-data-from-a-file-into-postgres
+create temporary table temp_json (vals text) on commit drop;
+copy temp_json from '/home/anton/docs/projects/smind/parsedata.json';
+select vals::json as vals1
+-- select to_json(vals)
+-- select json_array_elements(to_json(vals)) as vals1
+-- select replace(vals,'\"','\\"') as vals1
+from temp_json;
+
+
+select replace('Quality \"Life Assessment:  High","data_sources":"\"Life','\"','''')
+
+
+select json_array_elements('[{"id":193,"cod":"90832rnfe","desc":"profile for current Ingeo¬Æ polylactide"},{"id":195}]'::json)->>'id'
+select jsonb_array_elements('[{"id":193,"cod":"90832rnfe","desc":"profile for current Ingeo¬Æ polylactide"},{"id":195}]'::jsonb)->>'id'
+
+-- {"id":193,"cod":"90832rnfe","desc":"profile for current Ingeo¬Æ polylactide"}
+select to_json('profile for current Ingeo¬Æ polylactide'::text)
+
+
+
